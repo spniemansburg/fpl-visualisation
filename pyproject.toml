@@ -1,0 +1,12 @@
+[project]
+name = "fpl-visualisation"
+version = "0.1.0"
+description = "Interactive dashboard for a Fantasy Premier League mini-league season"
+requires-python = ">=3.12"
+dependencies = [
+    "plotly>=6.7.0",
+    "requests>=2.34.2",
+]
+
+[project.scripts]
+fpl-vis = "fpl_visualisation:main"
