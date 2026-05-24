@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+
+# macOS
+.DS_Store
+.AppleDouble
+
+# Generated outputs
+fpl_presentation.html
+fpl_league_visualisation.html
+fpl_race.html
+
+# Raw API data — re-fetchable, can be large
+fpl_raw.json
+
+# Editor / IDE
+.idea/
+.vscode/
+*.swp

@@ -19,9 +19,15 @@ uv sync
 ## Usage
 
 ```bash
+# Full interactive dashboard (3-panel Plotly chart)
 uv run fpl_visualisation.py
-# or via the installed script entry-point:
-uv run fpl-vis
+
+# Reveal.js + D3 presentation  ← main output
+uv run fpl_export.py
+uv run fpl_export.py --league-id 157910   # different league next season
+
+# Plotly animated race (older, simpler version)
+uv run fpl_race.py
 ```
 
 Set `LEAGUE_ID` at the top of the script to your own classic league ID.  
