@@ -13,6 +13,7 @@ Pipeline:
 
 import argparse
 import json
+import statistics
 
 from fpl_visualisation import PALETTE, CHIPS
 
@@ -138,6 +139,66 @@ def _compute_league_ranks(managers: list[dict]) -> list[dict]:
     return managers
 
 
+# ── Season analysis ────────────────────────────────────────────────────────────
+
+def _compute_season_decided(managers: list[dict]) -> dict:
+    """Compute four decisive-factor metrics for the 'Where Was The Race Decided?' slide.
+    managers must be sorted by final_rank ascending (index 0 = winner).
+    """
+    # Consistency: stdev of GW scores — lower = steadier
+    consistency = [round(statistics.stdev(m["gw_points"]), 1) for m in managers]
+
+    # Chip returns: avg score on chip weeks minus that manager's season average
+    def chip_return(m: dict) -> float:
+        season_avg = sum(m["gw_points"]) / len(m["gw_points"])
+        chip_gws   = {c["event"] for c in m.get("chips", [])}
+        scores     = [m["gw_points"][m["gw_nums"].index(gw)]
+                      for gw in chip_gws if gw in m["gw_nums"]]
+        return round(sum(scores) / len(scores) - season_avg, 1) if scores else 0.0
+
+    chip_returns = [chip_return(m) for m in managers]
+
+    # Captaincy: total bonus pts from the armband (multiplier − 1) × player pts
+    captaincy = [m["captain_bonus"] for m in managers]
+
+    # Mistakes: points left on bench + transfer hit cost (lower = better)
+    mistakes = [m["bench_pts"] + m["transfer_hits"] for m in managers]
+
+    # Verdict sentence comparing the top two
+    leader, runner = managers[0], managers[1]
+    margin   = leader["cumulative"][-1] - runner["cumulative"][-1]
+    ln, rn   = leader["name"].split()[0], runner["name"].split()[0]
+
+    advantages = []
+    cap_diff     = captaincy[0] - captaincy[1]
+    mistake_diff = mistakes[1] - mistakes[0]  # positive = runner wasted more
+    chip_diff    = chip_returns[0] - chip_returns[1]
+    cons_diff    = consistency[1] - consistency[0]  # positive = leader is steadier
+
+    if cap_diff > 5:
+        advantages.append(f"+{cap_diff} captaincy bonus")
+    if cons_diff > 0:
+        advantages.append(f"steadier scoring ({consistency[0]} vs {consistency[1]} σ)")
+    if mistake_diff > 5:
+        advantages.append(f"{mistake_diff} fewer pts wasted")
+    if chip_diff > 2:
+        advantages.append(f"better chip timing (+{round(chip_diff, 1)}/chip GW)")
+
+    if advantages:
+        verdict = f"{ln}'s {' and '.join(advantages[:2])} over {rn} decided the {margin}-pt race."
+    else:
+        verdict = (f"A razor-thin {margin}-pt margin — small edges across 38 GWs "
+                   f"separated {ln} from {rn} at the final whistle.")
+
+    return {
+        "consistency":  consistency,
+        "chip_returns": chip_returns,
+        "captaincy":    captaincy,
+        "mistakes":     mistakes,
+        "verdict":      verdict,
+    }
+
+
 # ── Main analysis ──────────────────────────────────────────────────────────────
 
 def analyse(raw: dict) -> dict:
@@ -162,12 +223,16 @@ def analyse(raw: dict) -> dict:
         # ── GW-level series ────────────────────────────────────────────────
         gw_nums, gw_points, cumulative = [], [], []
         running = 0
+        captain_bonus = 0
         for row in mgr["gw_history"]:
             net = row["points"] - row.get("event_transfers_cost", 0)
             running += net
             gw_nums.append(row["gw"])
             gw_points.append(net)
             cumulative.append(running)
+            for pick in row.get("picks", []):
+                if pick.get("is_captain", False) and pick.get("multiplier", 0) > 0:
+                    captain_bonus += pick["gw_points"] * (pick["multiplier"] - 1)
 
         transfer_hits = sum(r.get("event_transfers_cost", 0) for r in mgr["gw_history"])
         bench_total   = sum(r.get("points_on_bench", 0)      for r in mgr["gw_history"])
@@ -208,6 +273,7 @@ def analyse(raw: dict) -> dict:
             "cumulative":    cumulative,
             "transfer_hits": transfer_hits,
             "bench_pts":     bench_total,
+            "captain_bonus": captain_bonus,
             "chips":         chips_out,
             "players":       players,
             "top_players":   [
@@ -224,12 +290,15 @@ def analyse(raw: dict) -> dict:
                     "in_from_start": p["in_from_start"],
                     "still_in":      p["still_in"],
                 }
-                for p in players[:3]
+                for p in players[:5]
             ],
         })
 
     # Add league ranks
     managers_out = _compute_league_ranks(managers_out)
+
+    stats = _compute_stats(managers_out)
+    stats["season_decided"] = _compute_season_decided(managers_out)
 
     return {
         "league": {
@@ -237,7 +306,7 @@ def analyse(raw: dict) -> dict:
             "season": meta["season"],
         },
         "managers": managers_out,
-        "stats":    _compute_stats(managers_out),
+        "stats":    stats,
     }
 
 

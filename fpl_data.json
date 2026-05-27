@@ -132,6 +132,7 @@
       ],
       "transfer_hits": 12,
       "bench_pts": 344,
+      "captain_bonus": 304,
       "chips": [
         {
           "name": "wildcard",
@@ -2297,6 +2298,32 @@
           "last_gw": 38,
           "in_from_start": false,
           "still_in": true
+        },
+        {
+          "id": 8,
+          "name": "J.Timber",
+          "team": "ARS",
+          "position": "DEF",
+          "total_pts": 101,
+          "gws_owned": 26,
+          "gws_in_xi": 23,
+          "first_gw": 8,
+          "last_gw": 34,
+          "in_from_start": false,
+          "still_in": false
+        },
+        {
+          "id": 82,
+          "name": "Semenyo",
+          "team": "MCI",
+          "position": "MID",
+          "total_pts": 92,
+          "gws_owned": 17,
+          "gws_in_xi": 15,
+          "first_gw": 4,
+          "last_gw": 33,
+          "in_from_start": false,
+          "still_in": false
         }
       ],
       "league_rank": [
@@ -2468,6 +2495,7 @@
       ],
       "transfer_hits": 0,
       "bench_pts": 308,
+      "captain_bonus": 285,
       "chips": [
         {
           "name": "wildcard",
@@ -4664,6 +4692,32 @@
           "last_gw": 38,
           "in_from_start": false,
           "still_in": true
+        },
+        {
+          "id": 82,
+          "name": "Semenyo",
+          "team": "MCI",
+          "position": "MID",
+          "total_pts": 97,
+          "gws_owned": 20,
+          "gws_in_xi": 19,
+          "first_gw": 3,
+          "last_gw": 35,
+          "in_from_start": false,
+          "still_in": false
+        },
+        {
+          "id": 136,
+          "name": "Thiago",
+          "team": "BRE",
+          "position": "FWD",
+          "total_pts": 93,
+          "gws_owned": 20,
+          "gws_in_xi": 20,
+          "first_gw": 12,
+          "last_gw": 31,
+          "in_from_start": false,
+          "still_in": false
         }
       ],
       "league_rank": [
@@ -4835,6 +4889,7 @@
       ],
       "transfer_hits": 8,
       "bench_pts": 336,
+      "captain_bonus": 241,
       "chips": [
         {
           "name": "3xc",
@@ -6873,6 +6928,32 @@
           "last_gw": 38,
           "in_from_start": true,
           "still_in": true
+        },
+        {
+          "id": 136,
+          "name": "Thiago",
+          "team": "BRE",
+          "position": "FWD",
+          "total_pts": 149,
+          "gws_owned": 27,
+          "gws_in_xi": 27,
+          "first_gw": 10,
+          "last_gw": 38,
+          "in_from_start": false,
+          "still_in": true
+        },
+        {
+          "id": 101,
+          "name": "Kelleher",
+          "team": "BRE",
+          "position": "GK",
+          "total_pts": 103,
+          "gws_owned": 35,
+          "gws_in_xi": 25,
+          "first_gw": 1,
+          "last_gw": 38,
+          "in_from_start": true,
+          "still_in": true
         }
       ],
       "league_rank": [
@@ -6927,6 +7008,29 @@
     "max_gap": {
       "gw": 37,
       "pts": 99
+    },
+    "season_decided": {
+      "consistency": [
+        17.4,
+        18.6,
+        16.8
+      ],
+      "chip_returns": [
+        9.6,
+        13.5,
+        7.9
+      ],
+      "captaincy": [
+        304,
+        285,
+        241
+      ],
+      "mistakes": [
+        356,
+        308,
+        344
+      ],
+      "verdict": "Stephan's +19 captaincy bonus and steadier scoring (17.4 vs 18.6 \u03c3) over Maurice decided the 10-pt race."
     }
   }
 }

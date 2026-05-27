@@ -115,22 +115,45 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     .cl-gwtick  { position: absolute; top: 20px; transform: translateX(-50%); font-size: .4em; color: rgba(255,255,255,.18); }
 
     /* ── Slide 6: Top Players ── */
-    .tp-grid  { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: .4em; }
-    .tp-col   { background: rgba(255,255,255,.04); border-radius: 10px; padding: 12px 14px; }
-    .tp-head  { font-size: .68em; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,.08); padding-bottom: 8px; margin-bottom: 10px; }
+    .tp-slide       { display: flex !important; flex-direction: column; overflow: hidden; }
+    .tp-scroll-wrap { overflow-y: auto; flex: 1; padding-right: 6px; }
+    .tp-scroll-wrap::-webkit-scrollbar       { width: 4px; }
+    .tp-scroll-wrap::-webkit-scrollbar-track { background: transparent; }
+    .tp-scroll-wrap::-webkit-scrollbar-thumb { background: rgba(255,255,255,.18); border-radius: 2px; }
+    .tp-grid  { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: .4em; }
+    .tp-col   { background: rgba(255,255,255,.04); border-radius: 10px; padding: 10px 12px; }
+    .tp-head  { font-size: .68em; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,.08); padding-bottom: 6px; margin-bottom: 8px; }
     .tp-sub   { font-size: .55em; font-weight: 400; color: var(--dim); }
-    .tp-card  { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,.05); }
+    .tp-card  { margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,.05); }
     .tp-card:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
     .tp-row1  { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
     .tp-medal { font-size: .85em; flex-shrink: 0; }
     .tp-name  { font-size: .8em; font-weight: 700; color: #fff; }
     .tp-badge { font-size: .52em; color: rgba(255,255,255,.4); background: rgba(255,255,255,.08); padding: 1px 5px; border-radius: 3px; white-space: nowrap; }
-    .tp-row2  { display: flex; align-items: baseline; gap: 8px; margin-top: 3px; }
+    .tp-row2  { display: flex; align-items: baseline; gap: 8px; margin-top: 2px; }
     .tp-pts   { font-size: 1.05em; font-weight: 900; }
     .tp-period { font-size: .55em; color: var(--dim); }
     /* Transfer in/out indicators */
     .tp-in    { color: #32cd32; font-weight: 700; }
     .tp-out   { color: #e8002d; font-weight: 700; }
+
+    /* ── Slide 7: Race Decided ── */
+    .dc-lead       { margin-top: .3em; }
+    .dc-lead svg   { width: 100%; height: auto; display: block; }
+    .dc-grid       { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px; }
+    .dc-card       { background: rgba(255,255,255,.04); border-radius: 8px; padding: 10px 12px; }
+    .dc-card-title { font-size: .56em; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+    .dc-card-sub   { font-size: .5em; color: rgba(255,255,255,.25); margin-bottom: 6px; font-style: italic; }
+    .dc-extra      { font-size: .5em; color: rgba(255,255,255,.3); margin: -1px 0 2px 12px; }
+    .dc-row        { display: flex; align-items: center; gap: 5px; margin: 4px 0 1px; font-size: .64em; }
+    .dc-dot        { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .dc-name       { flex: 1; color: rgba(255,255,255,.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dc-val        { font-weight: 400; color: var(--dim); white-space: nowrap; margin-left: 4px; }
+    .dc-bar-wrap   { height: 3px; background: rgba(255,255,255,.07); border-radius: 2px; margin-bottom: 4px; }
+    .dc-mini-bar   { height: 100%; border-radius: 2px; transition: width .3s; }
+    .dc-winner .dc-name { color: #fff !important; font-weight: 700; }
+    .dc-winner .dc-val  { font-weight: 900; }
+    .dc-verdict    { font-size: .62em; color: var(--dim); text-align: center; margin-top: 10px; line-height: 1.5; font-style: italic; }
   </style>
 </head>
 <body>
@@ -175,10 +198,20 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     <div id="chip-wrap"></div>
   </section>
 
-  <!-- ⑥ Top Players ────────────────────────────────────────────────────── -->
+  <!-- ⑥ Race Decided ─────────────────────────────────────────────────── -->
   <section data-background-color="#0e0e1a">
+    <h2>🎯 Where Was The Race Decided?</h2>
+    <div class="dc-lead" id="dc-lead"></div>
+    <div class="dc-grid" id="dc-grid"></div>
+    <p class="dc-verdict" id="dc-verdict"></p>
+  </section>
+
+  <!-- ⑦ Top Players ────────────────────────────────────────────────────── -->
+  <section class="tp-slide" data-background-color="#0e0e1a">
     <h2>⭐ Season's Best Players</h2>
-    <div class="tp-grid" id="tp-grid"></div>
+    <div class="tp-scroll-wrap">
+      <div class="tp-grid" id="tp-grid"></div>
+    </div>
   </section>
 
  </div>
@@ -190,7 +223,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 // ── Embedded data ─────────────────────────────────────────────────────────────
 const DATA = /*DATA_PLACEHOLDER*/;
 
-const MEDALS = ['🥇','🥈','🥉'];
+const MEDALS = ['🥇','🥈','🥉','4','5'];
 
 // ── Slide 1: Title ────────────────────────────────────────────────────────────
 document.getElementById('t-name').textContent   = DATA.league.name;
@@ -267,7 +300,137 @@ DATA.managers.forEach((m, i) => {
   });
 })();
 
-// ── Slide 6: Top Players ──────────────────────────────────────────────────────
+// ── Slide 6: Race Decided ─────────────────────────────────────────────────────
+(function () {
+  const mgrs   = DATA.managers;
+  const nGWs   = Math.max(...mgrs.map(m => m.gw_nums.length));
+  const sd     = DATA.stats.season_decided;
+  const leader = mgrs[0];
+
+  // ── Lead tracker SVG ────────────────────────────────────────────────────────
+  const W = 860, H = 155, ML = 10, MR = 10, MT = 22, MB = 22;
+  const cW = W - ML - MR, cH = H - MT - MB;
+  const maxGap = Math.max(...mgrs.map(m =>
+    Math.max(...m.gw_nums.map((_, i) => leader.cumulative[i] - m.cumulative[i]))
+  )) || 1;
+
+  const xS = i => ML + (i / (nGWs - 1)) * cW;
+  const yS = v => MT + (v / maxGap) * cH;
+
+  const NS = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs) {
+    const e = document.createElementNS(NS, tag);
+    Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v));
+    return e;
+  }
+  function txt(content, attrs) {
+    const e = el('text', attrs);
+    e.textContent = content;
+    return e;
+  }
+
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, overflow: 'visible' });
+
+  // Zero (leader) dashed line + label above it
+  svg.appendChild(el('line', { x1: ML, x2: W - MR, y1: MT, y2: MT,
+    stroke: 'rgba(255,255,255,.18)', 'stroke-dasharray': '4 3' }));
+  svg.appendChild(txt('0 pts behind (leader)', { x: ML, y: MT - 5,
+    'font-size': 8, fill: 'rgba(255,255,255,.35)' }));
+
+  // Bottom axis label
+  svg.appendChild(txt(`${maxGap} pts behind`, { x: ML, y: MT + cH + 14,
+    'font-size': 8, fill: 'rgba(255,255,255,.2)' }));
+
+  // GW axis ticks
+  [1, 10, 20, 30, nGWs].forEach(gw => {
+    svg.appendChild(txt(`GW${gw}`, { x: xS(gw - 1), y: H - 3,
+      'text-anchor': 'middle', 'font-size': 9, fill: 'rgba(255,255,255,.25)' }));
+  });
+
+  // Manager lines + chip markers (draw lines first, then dots on top)
+  mgrs.forEach(m => {
+    const pts = m.gw_nums.map((_, i) => `${xS(i)},${yS(leader.cumulative[i] - m.cumulative[i])}`).join(' ');
+    svg.appendChild(el('polyline', { points: pts, fill: 'none',
+      stroke: m.color, 'stroke-width': 2, opacity: 0.9 }));
+  });
+  mgrs.forEach(m => {
+    (m.chips || []).forEach(c => {
+      const gi = m.gw_nums.indexOf(c.event);
+      if (gi === -1) return;
+      const cx = xS(gi), cy = yS(leader.cumulative[gi] - m.cumulative[gi]);
+      svg.appendChild(el('circle', { cx, cy, r: 5, fill: c.color,
+        stroke: '#0e0e1a', 'stroke-width': 1.5 }));
+    });
+  });
+
+  document.getElementById('dc-lead').appendChild(svg);
+
+  // ── Factor cards ────────────────────────────────────────────────────────────
+  const avgPts = m => (m.gw_points.reduce((a, b) => a + b, 0) / m.gw_points.length).toFixed(1);
+
+  const CARDS = [
+    {
+      title: '📊 Consistency',
+      sub: 'spread of GW scores (lower σ = steadier)',
+      values: sd.consistency,
+      fmt:   v => v.toFixed(1) + ' σ',
+      extra: (m, mi) => `avg ${avgPts(m)} · range ${Math.min(...m.gw_points)}–${Math.max(...m.gw_points)}`,
+      winnerIsMin: true,
+    },
+    {
+      title: '🃏 Chip Returns',
+      sub: 'avg score on chip GWs vs season avg',
+      values: sd.chip_returns,
+      fmt:   v => (v >= 0 ? '+' : '') + v.toFixed(1) + ' pts/GW',
+      winnerIsMin: false,
+    },
+    {
+      title: '🎯 Captaincy',
+      sub: 'total bonus pts from the armband',
+      values: sd.captaincy,
+      fmt:   v => `+${v} pts`,
+      winnerIsMin: false,
+    },
+    {
+      title: '⚠️ Mistakes',
+      sub: 'bench left + transfer hits',
+      values: sd.mistakes,
+      fmt:   v => `${v} pts`,
+      extra: (m) => `bench ${m.bench_pts} · hits ${m.transfer_hits}`,
+      winnerIsMin: true,
+    },
+  ];
+
+  const grid = document.getElementById('dc-grid');
+  CARDS.forEach(card => {
+    const winVal = card.winnerIsMin ? Math.min(...card.values) : Math.max(...card.values);
+    const maxAbs = Math.max(...card.values.map(Math.abs)) || 1;
+    const cardEl = document.createElement('div');
+    cardEl.className = 'dc-card';
+    let html = `<div class="dc-card-title">${card.title}</div>`;
+    if (card.sub) html += `<div class="dc-card-sub">${card.sub}</div>`;
+    mgrs.forEach((m, mi) => {
+      const v      = card.values[mi];
+      const winner = v === winVal;
+      const barPct = Math.abs(v) / maxAbs * 100;
+      const extra  = card.extra ? `<div class="dc-extra">${card.extra(m, mi)}</div>` : '';
+      html += `<div class="dc-row${winner ? ' dc-winner' : ''}">
+        <div class="dc-dot" style="background:${m.color}"></div>
+        <span class="dc-name">${m.name.split(' ')[0]}</span>
+        <span class="dc-val" style="color:${winner ? m.color : 'var(--dim)'}">${card.fmt(v)}</span>
+      </div>
+      ${extra}
+      <div class="dc-bar-wrap"><div class="dc-mini-bar" style="width:${barPct}%;background:${m.color};opacity:${winner ? 1 : 0.35}"></div></div>`;
+    });
+    cardEl.innerHTML = html;
+    grid.appendChild(cardEl);
+  });
+
+  // ── Verdict ─────────────────────────────────────────────────────────────────
+  document.getElementById('dc-verdict').textContent = sd.verdict;
+})();
+
+// ── Slide 7: Top Players ──────────────────────────────────────────────────────
 (function () {
   const nGWs = Math.max(...DATA.managers.map(m => m.gw_nums.length));
 
@@ -289,6 +452,7 @@ DATA.managers.forEach((m, i) => {
     (m.top_players || []).forEach((p, pi) => {
       const card = document.createElement('div');
       card.className = 'tp-card';
+      card.style.fontSize = `${1 - pi * 0.07}em`;
       card.innerHTML = `
         <div class="tp-row1">
           <span class="tp-medal">${MEDALS[pi]}</span>
