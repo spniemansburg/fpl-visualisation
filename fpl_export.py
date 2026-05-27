@@ -272,11 +272,12 @@ DATA.managers.forEach((m, i) => {
   const nGWs = Math.max(...DATA.managers.map(m => m.gw_nums.length));
 
   function fmtPeriod(p) {
-    const inStr  = p.in_from_start ? 'From start'         : `<span class="tp-in">↑ GW ${p.first_gw}</span>`;
-    const outStr = p.still_in      ? '→ end'              : `<span class="tp-out">↓ GW ${p.last_gw}</span>`;
-    const suffix = `<span style="color:var(--dim)">${p.gws_in_xi} GWs in XI</span>`;
-    if (p.in_from_start && p.still_in) return `<span style="color:var(--dim)">All season · ${p.gws_in_xi} GWs in XI</span>`;
-    return `<span style="color:var(--dim)">${inStr} ${outStr}</span> ${suffix}`;
+    if (p.gws_owned === nGWs) return `<span style="color:var(--dim)">All season · ${p.gws_in_xi} GWs in XI</span>`;
+    const contiguous = p.gws_owned === (p.last_gw - p.first_gw + 1);
+    if (!contiguous) return `<span style="color:var(--dim)">Owned ${p.gws_owned}/${nGWs} GWs · ${p.gws_in_xi} in XI</span>`;
+    const inStr  = p.in_from_start ? 'From start' : `<span class="tp-in">↑ GW ${p.first_gw}</span>`;
+    const outStr = p.still_in      ? '→ end'      : `<span class="tp-out">↓ GW ${p.last_gw}</span>`;
+    return `<span style="color:var(--dim)">${inStr} ${outStr}</span> <span style="color:var(--dim)">${p.gws_in_xi} GWs in XI</span>`;
   }
 
   const grid = document.getElementById('tp-grid');

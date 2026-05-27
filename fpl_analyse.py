@@ -217,6 +217,7 @@ def analyse(raw: dict) -> dict:
                     "team":          p["team"],
                     "position":      p["position"],
                     "total_pts":     p["total_pts_contributed"],
+                    "gws_owned":     p["gws_owned"],
                     "gws_in_xi":     p["gws_in_xi"],
                     "first_gw":      p["first_gw_owned"],
                     "last_gw":       p["last_gw_owned"],
