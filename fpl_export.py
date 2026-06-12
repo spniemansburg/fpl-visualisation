@@ -171,9 +171,9 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 
   <!-- ② Race ───────────────────────────────────────────────────────────── -->
   <section data-background-color="#0e0e1a" id="race-slide">
-    <h2>📈 Points Race</h2>
+    <h2>📈 Puntenrace</h2>
     <div id="race-controls">
-      <button class="rbtn" id="btn-play">▶ Play</button>
+      <button class="rbtn" id="btn-play">▶ Start</button>
       <button class="rbtn" id="btn-restart">↺</button>
       <input type="range" id="gw-slider" min="0" value="0" />
       <span id="gw-lbl">GW 0</span>
@@ -183,25 +183,25 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 
   <!-- ③ Podium ─────────────────────────────────────────────────────────── -->
   <section data-background-color="#0e0e1a">
-    <h2>🏆 Final Standings</h2>
+    <h2>🏆 Eindstand</h2>
     <div class="podium-wrap" id="podium"></div>
   </section>
 
   <!-- ④ Stats ──────────────────────────────────────────────────────────── -->
   <section data-background-color="#0e0e1a">
-    <h2>📊 Season by the Numbers</h2>
+    <h2>📊 Het seizoen in cijfers</h2>
     <div class="stats-grid" id="stats-grid"></div>
   </section>
 
   <!-- ⑤ Chips ──────────────────────────────────────────────────────────── -->
   <section data-background-color="#0e0e1a">
-    <h2>🃏 Chip Timeline</h2>
+    <h2>🃏 Chip tijdlijn</h2>
     <div id="chip-wrap"></div>
   </section>
 
   <!-- ⑥ Race Decided ─────────────────────────────────────────────────── -->
   <section data-background-color="#0e0e1a">
-    <h2>🎯 Where Was The Race Decided?</h2>
+    <h2>🎯 Waar werd het seizoen beslist?</h2>
     <div class="dc-lead" id="dc-lead"></div>
     <div class="dc-grid" id="dc-grid"></div>
     <p class="dc-verdict" id="dc-verdict"></p>
@@ -209,7 +209,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 
   <!-- ⑦ Top Players ────────────────────────────────────────────────────── -->
   <section class="tp-slide" data-background-color="#0e0e1a">
-    <h2>⭐ Season's Best Players</h2>
+    <h2>⭐ Beste spelers van het seizoen</h2>
     <div class="tp-scroll-wrap">
       <div class="tp-grid" id="tp-grid"></div>
     </div>
@@ -228,7 +228,7 @@ const MEDALS = ['🥇','🥈','🥉','4','5'];
 
 // ── Slide 1: Title ────────────────────────────────────────────────────────────
 document.getElementById('t-name').textContent   = DATA.league.name;
-document.getElementById('t-season').textContent = DATA.league.season + ' Season';
+document.getElementById('t-season').textContent = 'FPL ' + DATA.league.season;
 
 // ── Slide 3: Podium ───────────────────────────────────────────────────────────
 (function () {
@@ -253,10 +253,10 @@ document.getElementById('t-season').textContent = DATA.league.season + ' Season'
   const hitsRows  = mgrs.map(m => `<div class="s-row"><div class="s-dot" style="background:${m.color}"></div><span style="color:rgba(255,255,255,.85)">${m.name.split(' ')[0]}</span><span class="s-val" style="color:${m.color}">−${m.transfer_hits} pts</span></div>`).join('');
   const benchRows = mgrs.map(m => `<div class="s-row"><div class="s-dot" style="background:${m.color}"></div><span style="color:rgba(255,255,255,.85)">${m.name.split(' ')[0]}</span><span class="s-val" style="color:${m.color}">${m.bench_pts} pts</span></div>`).join('');
   document.getElementById('stats-grid').innerHTML = `
-    <div class="stat-card"><div class="s-label">Best Single Gameweek</div><div class="s-value">${s.best_gw.pts} pts</div><div class="s-sub">${s.best_gw.manager.split(' ')[0]} · ${s.best_gw.team} · GW ${s.best_gw.gw}</div></div>
-    <div class="stat-card"><div class="s-label">Widest Gap in the Race</div><div class="s-value">${s.max_gap.pts} pts</div><div class="s-sub">at Gameweek ${s.max_gap.gw}</div></div>
-    <div class="stat-card"><div class="s-label">Transfer Hits</div>${hitsRows}</div>
-    <div class="stat-card"><div class="s-label">Points Left on Bench</div>${benchRows}</div>`;
+    <div class="stat-card"><div class="s-label">Beste Speelweek</div><div class="s-value">${s.best_gw.pts} pts</div><div class="s-sub">${s.best_gw.manager.split(' ')[0]} · ${s.best_gw.team} · GW ${s.best_gw.gw}</div></div>
+    <div class="stat-card"><div class="s-label">Grootste Voorsprong</div><div class="s-value">${s.max_gap.pts} pts</div><div class="s-sub">in speelweek ${s.max_gap.gw}</div></div>
+    <div class="stat-card"><div class="s-label">Transferstraf</div>${hitsRows}</div>
+    <div class="stat-card"><div class="s-label">Punten op de Bank</div>${benchRows}</div>`;
 })();
 
 // ── Slide 5: Chip Timeline ────────────────────────────────────────────────────
@@ -325,11 +325,11 @@ document.getElementById('t-season').textContent = DATA.league.season + ' Season'
   // Zero (leader) dashed line + label above it
   svg.appendChild(el('line', { x1: ML, x2: W - MR, y1: MT, y2: MT,
     stroke: 'rgba(255,255,255,.18)', 'stroke-dasharray': '4 3' }));
-  svg.appendChild(txt('0 pts behind (leader)', { x: ML, y: MT - 5,
+  svg.appendChild(txt('0 pts achter (leider)', { x: ML, y: MT - 5,
     'font-size': 8, fill: 'rgba(255,255,255,.35)' }));
 
   // Bottom axis label
-  svg.appendChild(txt(`${maxGap} pts behind`, { x: ML, y: MT + cH + 14,
+  svg.appendChild(txt(`${maxGap} pts achter`, { x: ML, y: MT + cH + 14,
     'font-size': 8, fill: 'rgba(255,255,255,.2)' }));
 
   // GW axis ticks (skip GW1 — it overlaps the "pts behind" label at the left edge)
@@ -361,30 +361,32 @@ document.getElementById('t-season').textContent = DATA.league.season + ' Season'
 
   const CARDS = [
     {
-      title: '📊 Consistency',
-      sub: 'spread of GW scores (lower σ = steadier)',
+      title: '📊 Consistentie',
+      sub: 'spreiding van GW-scores (lagere σ = stabieler)',
       values: sd.consistency,
       fmt:   v => v.toFixed(1) + ' σ',
       extra: (m, mi) => `avg ${avgPts(m)} · range ${Math.min(...m.gw_points)}–${Math.max(...m.gw_points)}`,
       winnerIsMin: true,
     },
     {
-      title: '🃏 Chip Returns',
-      sub: 'avg score on chip GWs vs season avg',
+      title: '🃏 Chip Rendement',
+      sub: 'gem. score op chip-GW\'s vs seizoensgemiddelde',
       values: sd.chip_returns,
       fmt:   v => (v >= 0 ? '+' : '') + v.toFixed(1) + ' pts/GW',
       winnerIsMin: false,
+      stacked: true,
     },
     {
-      title: '🎯 Captaincy',
-      sub: 'total bonus pts from the armband',
+      title: '🎯 Aanvoerderschap',
+      sub: 'totale bonuspunten van de aanvoerdersband',
       values: sd.captaincy,
       fmt:   v => `+${v} pts`,
       winnerIsMin: false,
+      stacked: true,
     },
     {
-      title: '⚠️ Mistakes',
-      sub: 'bench left + transfer hits',
+      title: '⚠️ Fouten',
+      sub: 'bank + transferstraf',
       values: sd.mistakes,
       fmt:   v => `${v} pts`,
       extra: (m) => `bench ${m.bench_pts} · hits ${m.transfer_hits}`,
@@ -405,13 +407,24 @@ document.getElementById('t-season').textContent = DATA.league.season + ' Season'
       const winner = v === winVal;
       const barPct = Math.abs(v) / maxAbs * 100;
       const extra  = card.extra ? `<div class="dc-extra">${card.extra(m, mi)}</div>` : '';
-      html += `<div class="dc-row${winner ? ' dc-winner' : ''}">
-        <div class="dc-dot" style="background:${m.color}"></div>
-        <span class="dc-name">${m.name.split(' ')[0]}</span>
-        <span class="dc-val" style="color:${winner ? m.color : 'var(--dim)'}">${card.fmt(v)}</span>
-      </div>
-      ${extra}
-      <div class="dc-bar-wrap"><div class="dc-mini-bar" style="width:${barPct}%;background:${m.color};opacity:${winner ? 1 : 0.35}"></div></div>`;
+      const valColor = winner ? m.color : 'var(--dim)';
+      if (card.stacked) {
+        html += `<div class="dc-row${winner ? ' dc-winner' : ''}">
+          <div class="dc-dot" style="background:${m.color}"></div>
+          <span class="dc-name">${m.name.split(' ')[0]}</span>
+        </div>
+        <div style="margin:-1px 0 2px 17px;font-size:.62em;font-weight:${winner?900:400};color:${valColor}">${card.fmt(v)}</div>
+        ${extra}
+        <div class="dc-bar-wrap"><div class="dc-mini-bar" style="width:${barPct}%;background:${m.color};opacity:${winner ? 1 : 0.35}"></div></div>`;
+      } else {
+        html += `<div class="dc-row${winner ? ' dc-winner' : ''}">
+          <div class="dc-dot" style="background:${m.color}"></div>
+          <span class="dc-name">${m.name.split(' ')[0]}</span>
+          <span class="dc-val" style="color:${valColor}">${card.fmt(v)}</span>
+        </div>
+        ${extra}
+        <div class="dc-bar-wrap"><div class="dc-mini-bar" style="width:${barPct}%;background:${m.color};opacity:${winner ? 1 : 0.35}"></div></div>`;
+      }
     });
     cardEl.innerHTML = html;
     grid.appendChild(cardEl);
@@ -426,12 +439,12 @@ document.getElementById('t-season').textContent = DATA.league.season + ' Season'
   const nGWs = Math.max(...DATA.managers.map(m => m.gw_nums.length));
 
   function fmtPeriod(p) {
-    if (p.gws_owned === nGWs) return `<span style="color:var(--dim)">All season · ${p.gws_in_xi} GWs in XI</span>`;
+    if (p.gws_owned === nGWs) return `<span style="color:var(--dim)">Heel seizoen · ${p.gws_in_xi} GW's in XI</span>`;
     const contiguous = p.gws_owned === (p.last_gw - p.first_gw + 1);
-    if (!contiguous) return `<span style="color:var(--dim)">Owned ${p.gws_owned}/${nGWs} GWs · ${p.gws_in_xi} in XI</span>`;
-    const inStr  = p.in_from_start ? 'From start' : `<span class="tp-in">↑ GW ${p.first_gw}</span>`;
-    const outStr = p.still_in      ? '→ end'      : `<span class="tp-out">↓ GW ${p.last_gw}</span>`;
-    return `<span style="color:var(--dim)">${inStr} ${outStr}</span> <span style="color:var(--dim)">${p.gws_in_xi} GWs in XI</span>`;
+    if (!contiguous) return `<span style="color:var(--dim)">Owned ${p.gws_owned}/${nGWs} GW's · ${p.gws_in_xi} in XI</span>`;
+    const inStr  = p.in_from_start ? 'Vanaf begin' : `<span class="tp-in">↑ GW ${p.first_gw}</span>`;
+    const outStr = p.still_in      ? '→ einde'     : `<span class="tp-out">↓ GW ${p.last_gw}</span>`;
+    return `<span style="color:var(--dim)">${inStr} ${outStr}</span> <span style="color:var(--dim)">${p.gws_in_xi} GW's in XI</span>`;
   }
 
   const grid = document.getElementById('tp-grid');
@@ -605,13 +618,13 @@ document.getElementById('t-season').textContent = DATA.league.season + ' Season'
     if (pos >= nGWs) { pos = 0; render(0, true); }
     startTs  = performance.now();
     startPos = pos;
-    document.getElementById('btn-play').textContent = '⏸ Pause';
+    document.getElementById('btn-play').textContent = '⏸ Pauze';
     function tick(now) {
       pos = startPos + (now - startTs) / MS_PER_GW;
       if (pos >= nGWs) {
         pos = nGWs; render(pos, false);
         raf = null;
-        document.getElementById('btn-play').textContent = '▶ Play';
+        document.getElementById('btn-play').textContent = '▶ Start';
         return;
       }
       render(pos, false);
@@ -622,7 +635,7 @@ document.getElementById('t-season').textContent = DATA.league.season + ' Season'
 
   function pause() {
     if (raf) { cancelAnimationFrame(raf); raf = null; }
-    document.getElementById('btn-play').textContent = '▶ Play';
+    document.getElementById('btn-play').textContent = '▶ Start';
   }
 
   // ── Bootstrap ────────────────────────────────────────────────────────────────

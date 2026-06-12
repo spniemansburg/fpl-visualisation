@@ -176,19 +176,19 @@ def _compute_season_decided(managers: list[dict]) -> dict:
     cons_diff    = consistency[1] - consistency[0]  # positive = leader is steadier
 
     if cap_diff > 5:
-        advantages.append(f"+{cap_diff} captaincy bonus")
+        advantages.append(f"+{cap_diff} aanvoerdersbonus")
     if cons_diff > 0:
-        advantages.append(f"steadier scoring ({consistency[0]} vs {consistency[1]} σ)")
+        advantages.append(f"stabieler scoren ({consistency[0]} vs {consistency[1]} σ)")
     if mistake_diff > 5:
-        advantages.append(f"{mistake_diff} fewer pts wasted")
+        advantages.append(f"{mistake_diff} minder punten verspild")
     if chip_diff > 2:
-        advantages.append(f"better chip timing (+{round(chip_diff, 1)}/chip GW)")
+        advantages.append(f"betere chip-timing (+{round(chip_diff, 1)}/chip GW)")
 
     if advantages:
-        verdict = f"{ln}'s {' and '.join(advantages[:2])} over {rn} decided the {margin}-pt race."
+        verdict = f"{ln}'s {' en '.join(advantages[:2])} tegenover {rn} besliste de race met {margin} punten verschil."
     else:
-        verdict = (f"A razor-thin {margin}-pt margin — small edges across 38 GWs "
-                   f"separated {ln} from {rn} at the final whistle.")
+        verdict = (f"Een haarfijn verschil van {margin} punten — kleine voordelen over 38 speelweken "
+                   f"scheidden {ln} en {rn} aan het einde.")
 
     return {
         "consistency":  consistency,
