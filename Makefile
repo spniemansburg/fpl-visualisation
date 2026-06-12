@@ -10,3 +10,6 @@ analyse:
 
 export:
 	uv run fpl_export.py
+
+gw_data:
+	uv run fpl_export_gw_data.py

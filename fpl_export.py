@@ -76,13 +76,13 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     #gw-lbl { color: var(--dim); font-size: .72em; min-width: 72px; text-align: right; }
 
     /* D3 race elements */
-    .bar-name  { font: 700 13px Arial, sans-serif; }
-    .bar-team  { font: 10px Arial, sans-serif; fill: rgba(255,255,255,.35); }
-    .bar-pts   { font: 900 14px "Arial Black", sans-serif; fill: #fff; }
-    .chip-tag  { font: 700 10px Arial, sans-serif; }
-    .gw-wmark  { font: 900 110px "Arial Black", sans-serif; fill: rgba(255,255,255,.04); }
-    .x-tick    { font: 10px Arial, sans-serif; fill: rgba(255,255,255,.25); }
-    .grid-line { stroke: rgba(255,255,255,.06); stroke-width: 1; }
+    .bar-name   { font: 700 17px Arial, sans-serif; }
+    .bar-val    { font: 900 17px "Arial Black", Arial, sans-serif; fill: rgba(255,255,255,.85); }
+    .chip-tag   { font: 700 10px Arial, sans-serif; }
+    .x-tick     { font: 11px Arial, sans-serif; fill: rgba(255,255,255,.3); }
+    .grid-line  { stroke: rgba(255,255,255,.07); stroke-width: 1; }
+    .gw-counter { font: 900 88px "Arial Black", Arial, sans-serif; fill: rgba(255,255,255,.09); }
+    .total-lbl  { font: 600 14px Arial, sans-serif; fill: rgba(255,255,255,.28); }
 
     /* ── Slide 3: Podium ── */
     .podium-wrap { display: flex; align-items: flex-end; justify-content: center; gap: 14px; margin-top: .4em; }
@@ -469,123 +469,185 @@ DATA.managers.forEach((m, i) => {
   });
 })();
 
-// ── Slide 2: D3 Race ──────────────────────────────────────────────────────────
+// ── Slide 2: Bar-chart race (Flourish style) ─────────────────────────────
 (function () {
-  const managers  = DATA.managers;
-  const nGWs      = Math.max(...managers.map(m => m.gw_nums.length));
-  const maxAllPts = d3.max(managers, m => m.cumulative[m.cumulative.length - 1]);
+  const managers = DATA.managers;
+  const nGWs     = Math.max(...managers.map(m => m.gw_nums.length));
 
-  const SPEED  = 420, TRANS = 320;   // ms — lower = faster
-  const ROW_H  = 74, BAR_H = 44;
-  const ML = 160, MR = 65, MT = 8, MB = 28, CHART_W = 660;
-  const SVG_W  = ML + CHART_W + MR;  // 885 — fits inside Reveal's 960px
-  const SVG_H  = managers.length * ROW_H + MT + MB;
+  // Speed: one gameweek takes MS_PER_GW ms — full 38-GW race ≈ 13 s at 340
+  const MS_PER_GW = 340;
 
-  const x = d3.scaleLinear().domain([0, maxAllPts * 1.09]).range([0, CHART_W]);
+  // Flourish-style layout (unchanged)
+  const ML = 130, MR = 75, MT = 44, MB = 62;
+  const ROW_H = 110, BAR_H = 96;
+  const CHART_W = 605;
+  const CHART_H = managers.length * ROW_H;
+  const SVG_W   = ML + CHART_W + MR;
+  const SVG_H   = MT + CHART_H + MB;
+
+  // Mutable x-scale; domain end is eased toward leader's pts * 1.1 each frame
+  const x = d3.scaleLinear().range([0, CHART_W]);
+  let curDomainEnd = 1;
 
   const svg = d3.select('#race-svg-wrap').append('svg')
     .attr('viewBox', `0 0 ${SVG_W} ${SVG_H}`)
-    .style('width', '100%')   // scale to container, never overflow
-    .style('height', 'auto');
+    .style('width', '100%').style('height', 'auto');
 
-  const wmark = svg.append('text').attr('class', 'gw-wmark')
-    .attr('x', SVG_W - 8).attr('y', SVG_H - 4)
-    .attr('text-anchor', 'end').text('GW 1');
+  const g      = svg.append('g').attr('transform', `translate(${ML},${MT})`);
+  const gridG  = g.append('g');
+  const barsG  = g.append('g');
+  const xAxisG = g.append('g');
 
-  const g = svg.append('g').attr('transform', `translate(${ML},${MT})`);
-  const gridG = g.append('g');
+  // Thin vertical baseline
+  g.append('line').attr('class', 'grid-line')
+    .attr('x1', 0).attr('x2', 0).attr('y1', 0).attr('y2', CHART_H)
+    .attr('stroke', 'rgba(255,255,255,.18)');
 
-  function getSnap(gwIdx) {
+  const gwCounter = svg.append('text').attr('class', 'gw-counter')
+    .attr('x', SVG_W - 14).attr('y', SVG_H - 26)
+    .attr('text-anchor', 'end').text('0');
+
+  // ── Continuous value model ────────────────────────────────────────────────────
+  // C(m, k): manager's cumulative points at end of GW k (k=0 → season start = 0)
+  function C(m, k) {
+    if (k <= 0) return 0;
+    return m.cumulative[Math.min(k, m.cumulative.length) - 1];
+  }
+
+  // Linearly interpolate between GW boundaries for smooth bar growth
+  function ptsAt(m, pos) {
+    const g = Math.floor(pos), frac = pos - g;
+    return C(m, g) + (C(m, g + 1) - C(m, g)) * frac;
+  }
+
+  function getSnap(pos) {
     return managers.map((m, i) => ({
       ...m, origIdx: i,
-      pts:  m.cumulative[Math.min(gwIdx, m.cumulative.length - 1)],
-      chip: (m.chips || []).find(c => c.event === gwIdx + 1) || null,
+      pts: ptsAt(m, pos),
     })).sort((a, b) => b.pts - a.pts);
   }
 
-  function update(gwIdx, dur) {
-    const snap = getSnap(gwIdx);
-    const t = d3.transition().duration(dur).ease(d3.easeCubicInOut);
+  // ── Create persistent bar groups (one per manager, never recreated) ───────────
+  const displayY = {};
+  managers.forEach((_, i) => { displayY[i] = i * ROW_H + (ROW_H - BAR_H) / 2; });
 
-    wmark.transition(t).textTween(() => {
-      const prev = +wmark.text().replace('GW ', '') || 1;
-      const ip = d3.interpolateRound(prev, gwIdx + 1);
-      return t => `GW ${ip(t)}`;
-    });
+  barsG.selectAll('.bg')
+    .data(managers, (d, i) => i)
+    .enter().append('g').attr('class', 'bg')
+      .attr('data-idx', (d, i) => i)
+      .attr('transform', (d, i) => `translate(0,${displayY[i]})`)
+      .each(function (d) {
+        const grp = d3.select(this);
+        grp.append('rect').attr('class', 'bar-rect')
+          .attr('height', BAR_H).attr('width', 0).attr('fill', d.color);
+        grp.append('text').attr('class', 'bar-name')
+          .attr('x', -12).attr('y', BAR_H / 2)
+          .attr('text-anchor', 'end').attr('dominant-baseline', 'middle')
+          .attr('fill', d.color).text(d.name.split(' ')[0]);
+        grp.append('text').attr('class', 'bar-val')
+          .attr('x', 8).attr('y', BAR_H / 2)
+          .attr('dominant-baseline', 'middle').text('0');
+      });
 
-    const ticks = x.ticks(6);
+  // Cache element references — avoids D3 selector overhead per frame
+  const barEls = {};
+  barsG.selectAll('.bg').each(function () {
+    const idx = +d3.select(this).attr('data-idx');
+    barEls[idx] = {
+      grp:  this,
+      rect: this.querySelector('.bar-rect'),
+      val:  this.querySelector('.bar-val'),
+    };
+  });
+
+  // ── Core render — called every rAF frame (or immediately for controls) ────────
+  // snap=true: set positions instantly (no easing); snap=false: lerp toward target
+  function render(pos, snap) {
+    const snapshot = getSnap(pos);
+    const g = Math.floor(pos);
+
+    // Ease x-domain end toward leader's pts * 1.1
+    const frameMax  = Math.max(1, ...snapshot.map(s => s.pts));
+    const targetEnd = frameMax * 1.1;
+    curDomainEnd = snap ? targetEnd : curDomainEnd + (targetEnd - curDomainEnd) * 0.18;
+    x.domain([0, curDomainEnd]);
+
+    // Vertical grid lines + top x-axis tick labels
+    const ticks = x.ticks(5);
     gridG.selectAll('.grid-line').data(ticks).join('line').attr('class', 'grid-line')
       .attr('x1', d => x(d)).attr('x2', d => x(d))
-      .attr('y1', 0).attr('y2', managers.length * ROW_H);
-    gridG.selectAll('.x-tick').data(ticks).join('text').attr('class', 'x-tick')
-      .attr('x', d => x(d)).attr('y', managers.length * ROW_H + 16)
+      .attr('y1', 0).attr('y2', CHART_H);
+    xAxisG.selectAll('.x-tick').data(ticks).join('text').attr('class', 'x-tick')
+      .attr('x', d => x(d)).attr('y', -12)
       .attr('text-anchor', 'middle').text(d => d);
 
-    const bgs = g.selectAll('.bg').data(snap, d => d.name);
-    const enter = bgs.enter().append('g').attr('class', 'bg')
-      .attr('transform', (_, i) => `translate(0,${i * ROW_H + (ROW_H - BAR_H) / 2})`);
+    // Update each bar group
+    snapshot.forEach((d, rank) => {
+      const el = barEls[d.origIdx];
+      const w  = Math.max(0, x(d.pts));
 
-    enter.append('rect').attr('class', 'bar-rect')
-      .attr('height', BAR_H).attr('width', 0).attr('rx', 6)
-      .attr('fill', d => d.color);
-    enter.append('text').attr('class', 'bar-name')
-      .attr('x', -10).attr('y', BAR_H / 2 - 3)
-      .attr('text-anchor', 'end').attr('dominant-baseline', 'middle')
-      .attr('fill', d => d.color).text(d => d.name);
-    enter.append('text').attr('class', 'bar-team')
-      .attr('x', -10).attr('y', BAR_H / 2 + 12)
-      .attr('text-anchor', 'end').text(d => d.team_name);
-    enter.append('text').attr('class', 'bar-pts')
-      .attr('x', 4).attr('y', BAR_H / 2 + 1)
-      .attr('dominant-baseline', 'middle').attr('data-val', '0').text('0 pts');
-    enter.append('text').attr('class', 'chip-tag')
-      .attr('y', BAR_H / 2 + 16).attr('dominant-baseline', 'middle').attr('opacity', 0);
+      el.rect.setAttribute('width', w);
+      el.val.setAttribute('x', w + 10);
+      el.val.textContent = Math.round(d.pts);
 
-    const all = bgs.merge(enter);
-    all.transition(t).attr('transform', (_, i) => `translate(0,${i * ROW_H + (ROW_H - BAR_H) / 2})`);
-    all.select('.bar-rect').transition(t).attr('width', d => x(d.pts));
-    all.select('.bar-pts').transition(t).attr('x', d => x(d.pts) + 8)
-      .tween('text', function (d) {
-        const prev = +this.getAttribute('data-val') || 0;
-        const ip = d3.interpolateRound(prev, d.pts), node = this;
-        return tt => { node.textContent = ip(tt) + ' pts'; node.setAttribute('data-val', d.pts); };
-      });
-    all.select('.chip-tag').attr('x', d => x(d.pts) + 8).transition(t)
-      .attr('opacity', d => d.chip ? 1 : 0)
-      .attr('fill',    d => d.chip ? d.chip.color : '#fff')
-      .text(d => d.chip ? `[${d.chip.label}]` : '');
-    bgs.exit().remove();
+      // Smooth row reordering via per-frame lerp
+      const targetY = rank * ROW_H + (ROW_H - BAR_H) / 2;
+      displayY[d.origIdx] = snap
+        ? targetY
+        : displayY[d.origIdx] + (targetY - displayY[d.origIdx]) * 0.2;
+      el.grp.setAttribute('transform', `translate(0,${displayY[d.origIdx]})`);
+    });
 
-    document.getElementById('gw-slider').value = gwIdx + 1;
-    document.getElementById('gw-lbl').textContent = `GW ${gwIdx + 1} / ${nGWs}`;
+    // GW counter
+    const dispGW = Math.min(nGWs, g + 1);
+    gwCounter.text(dispGW);
+
+    // Sync slider + label
+    document.getElementById('gw-slider').value = dispGW;
+    document.getElementById('gw-lbl').textContent = `GW ${dispGW} / ${nGWs}`;
   }
 
-  document.getElementById('gw-slider').max = nGWs;
-  update(0, 0);
-
-  let gwIdx = 0, playing = false, timer = null;
+  // ── rAF playback engine ───────────────────────────────────────────────────────
+  let pos = 0, raf = null, startTs = 0, startPos = 0;
 
   function play() {
-    if (gwIdx >= nGWs - 1) { gwIdx = 0; update(0, 0); }
-    playing = true;
+    if (pos >= nGWs) { pos = 0; render(0, true); }
+    startTs  = performance.now();
+    startPos = pos;
     document.getElementById('btn-play').textContent = '⏸ Pause';
-    timer = setInterval(() => {
-      gwIdx++; update(gwIdx, TRANS);
-      if (gwIdx >= nGWs - 1) { clearInterval(timer); playing = false; document.getElementById('btn-play').textContent = '▶ Play'; }
-    }, SPEED);
+    function tick(now) {
+      pos = startPos + (now - startTs) / MS_PER_GW;
+      if (pos >= nGWs) {
+        pos = nGWs; render(pos, false);
+        raf = null;
+        document.getElementById('btn-play').textContent = '▶ Play';
+        return;
+      }
+      render(pos, false);
+      raf = requestAnimationFrame(tick);
+    }
+    raf = requestAnimationFrame(tick);
   }
+
   function pause() {
-    clearInterval(timer); playing = false;
+    if (raf) { cancelAnimationFrame(raf); raf = null; }
     document.getElementById('btn-play').textContent = '▶ Play';
   }
 
-  document.getElementById('btn-play').addEventListener('click', () => playing ? pause() : play());
-  document.getElementById('btn-restart').addEventListener('click', () => { pause(); gwIdx = 0; update(0, 400); });
-  document.getElementById('gw-slider').addEventListener('input', function () {
-    pause(); gwIdx = +this.value - 1; update(gwIdx, 300);
-  });
+  // ── Bootstrap ────────────────────────────────────────────────────────────────
+  document.getElementById('gw-slider').max = nGWs;
+  render(0, true);
 
-  update(0, 0);
+  // ── Controls ─────────────────────────────────────────────────────────────────
+  document.getElementById('btn-play').addEventListener('click', () => raf ? pause() : play());
+  document.getElementById('btn-restart').addEventListener('click', () => {
+    pause(); pos = 0; render(0, true);
+  });
+  document.getElementById('gw-slider').addEventListener('input', function () {
+    pause();
+    pos = +this.value;
+    render(pos, true);
+  });
 
   Reveal.on('slidechanged', e => {
     if (e.currentSlide.id === 'race-slide') { setTimeout(play, 500); }
