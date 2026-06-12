@@ -130,30 +130,30 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     .tp-medal { font-size: .85em; flex-shrink: 0; }
     .tp-name  { font-size: .8em; font-weight: 700; color: #fff; }
     .tp-badge { font-size: .52em; color: rgba(255,255,255,.4); background: rgba(255,255,255,.08); padding: 1px 5px; border-radius: 3px; white-space: nowrap; }
-    .tp-row2  { display: flex; align-items: baseline; gap: 8px; margin-top: 2px; }
-    .tp-pts   { font-size: 1.05em; font-weight: 900; }
+    .tp-row2  { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; margin-top: 2px; }
+    .tp-pts   { font-size: 1.05em; font-weight: 900; white-space: nowrap; }
     .tp-period { font-size: .55em; color: var(--dim); }
     /* Transfer in/out indicators */
     .tp-in    { color: #32cd32; font-weight: 700; }
     .tp-out   { color: #e8002d; font-weight: 700; }
 
     /* ── Slide 7: Race Decided ── */
-    .dc-lead       { margin-top: .3em; }
+    .dc-lead       { margin-top: .1em; }
     .dc-lead svg   { width: 100%; height: auto; display: block; }
-    .dc-grid       { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px; }
-    .dc-card       { background: rgba(255,255,255,.04); border-radius: 8px; padding: 10px 12px; }
+    .dc-grid       { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 6px; }
+    .dc-card       { background: rgba(255,255,255,.04); border-radius: 8px; padding: 7px 10px; }
     .dc-card-title { font-size: .56em; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
-    .dc-card-sub   { font-size: .5em; color: rgba(255,255,255,.25); margin-bottom: 6px; font-style: italic; }
-    .dc-extra      { font-size: .5em; color: rgba(255,255,255,.3); margin: -1px 0 2px 12px; }
-    .dc-row        { display: flex; align-items: center; gap: 5px; margin: 4px 0 1px; font-size: .64em; }
+    .dc-card-sub   { font-size: .5em; color: rgba(255,255,255,.25); margin-bottom: 3px; font-style: italic; }
+    .dc-extra      { font-size: .48em; color: rgba(255,255,255,.3); margin: -1px 0 1px 12px; }
+    .dc-row        { display: flex; align-items: center; gap: 5px; margin: 2px 0 0; font-size: .64em; }
     .dc-dot        { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
     .dc-name       { flex: 1; color: rgba(255,255,255,.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .dc-val        { font-weight: 400; color: var(--dim); white-space: nowrap; margin-left: 4px; }
-    .dc-bar-wrap   { height: 3px; background: rgba(255,255,255,.07); border-radius: 2px; margin-bottom: 4px; }
+    .dc-bar-wrap   { height: 3px; background: rgba(255,255,255,.07); border-radius: 2px; margin-bottom: 2px; }
     .dc-mini-bar   { height: 100%; border-radius: 2px; transition: width .3s; }
     .dc-winner .dc-name { color: #fff !important; font-weight: 700; }
     .dc-winner .dc-val  { font-weight: 900; }
-    .dc-verdict    { font-size: .62em; color: var(--dim); text-align: center; margin-top: 10px; line-height: 1.5; font-style: italic; }
+    .dc-verdict    { font-size: .62em; color: var(--dim); text-align: center; margin-top: 5px; line-height: 1.5; font-style: italic; }
   </style>
 </head>
 <body>
@@ -174,8 +174,8 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     <div id="race-controls">
       <button class="rbtn" id="btn-play">▶ Play</button>
       <button class="rbtn" id="btn-restart">↺</button>
-      <input type="range" id="gw-slider" min="1" value="1" />
-      <span id="gw-lbl">GW 1</span>
+      <input type="range" id="gw-slider" min="0" value="0" />
+      <span id="gw-lbl">GW 0</span>
     </div>
     <div id="race-svg-wrap"></div>
   </section>
@@ -239,7 +239,7 @@ document.getElementById('t-season').textContent = DATA.league.season + ' Season'
     el.innerHTML = `
       <div class="p-medal">${MEDALS[rank]}</div>
       <div class="p-pts" style="color:${m.color}">${m.cumulative[m.cumulative.length-1]}</div>
-      <div class="p-name">${m.name}</div>
+      <div class="p-name">${m.name.split(' ')[0]}</div>
       <div class="p-team">${m.team_name}</div>
       <div class="podium-block" style="height:${heights[col]}px;background:${m.color}22;border-top:4px solid ${m.color}"></div>`;
     document.getElementById('podium').appendChild(el);
@@ -249,10 +249,10 @@ document.getElementById('t-season').textContent = DATA.league.season + ' Season'
 // ── Slide 4: Stats ────────────────────────────────────────────────────────────
 (function () {
   const s = DATA.stats, mgrs = DATA.managers;
-  const hitsRows  = mgrs.map(m => `<div class="s-row"><div class="s-dot" style="background:${m.color}"></div><span style="color:rgba(255,255,255,.85)">${m.name}</span><span class="s-val" style="color:${m.color}">−${m.transfer_hits} pts</span></div>`).join('');
-  const benchRows = mgrs.map(m => `<div class="s-row"><div class="s-dot" style="background:${m.color}"></div><span style="color:rgba(255,255,255,.85)">${m.name}</span><span class="s-val" style="color:${m.color}">${m.bench_pts} pts</span></div>`).join('');
+  const hitsRows  = mgrs.map(m => `<div class="s-row"><div class="s-dot" style="background:${m.color}"></div><span style="color:rgba(255,255,255,.85)">${m.name.split(' ')[0]}</span><span class="s-val" style="color:${m.color}">−${m.transfer_hits} pts</span></div>`).join('');
+  const benchRows = mgrs.map(m => `<div class="s-row"><div class="s-dot" style="background:${m.color}"></div><span style="color:rgba(255,255,255,.85)">${m.name.split(' ')[0]}</span><span class="s-val" style="color:${m.color}">${m.bench_pts} pts</span></div>`).join('');
   document.getElementById('stats-grid').innerHTML = `
-    <div class="stat-card"><div class="s-label">Best Single Gameweek</div><div class="s-value">${s.best_gw.pts} pts</div><div class="s-sub">${s.best_gw.manager} · ${s.best_gw.team} · GW ${s.best_gw.gw}</div></div>
+    <div class="stat-card"><div class="s-label">Best Single Gameweek</div><div class="s-value">${s.best_gw.pts} pts</div><div class="s-sub">${s.best_gw.manager.split(' ')[0]} · ${s.best_gw.team} · GW ${s.best_gw.gw}</div></div>
     <div class="stat-card"><div class="s-label">Widest Gap in the Race</div><div class="s-value">${s.max_gap.pts} pts</div><div class="s-sub">at Gameweek ${s.max_gap.gw}</div></div>
     <div class="stat-card"><div class="s-label">Transfer Hits</div>${hitsRows}</div>
     <div class="stat-card"><div class="s-label">Points Left on Bench</div>${benchRows}</div>`;
@@ -266,7 +266,7 @@ document.getElementById('t-season').textContent = DATA.league.season + ' Season'
     row.className = 'cl-row';
     const who = document.createElement('div');
     who.className = 'cl-who';
-    who.innerHTML = `<span style="color:${m.color}">${m.name}</span> <span style="color:rgba(255,255,255,.35);font-weight:400">· ${m.team_name}</span>`;
+    who.innerHTML = `<span style="color:${m.color}">${m.name.split(' ')[0]}</span> <span style="color:rgba(255,255,255,.35);font-weight:400">· ${m.team_name}</span>`;
     row.appendChild(who);
     const axis = document.createElement('div');
     axis.className = 'cl-axis';
@@ -298,7 +298,7 @@ document.getElementById('t-season').textContent = DATA.league.season + ' Season'
   const leader = mgrs[0];
 
   // ── Lead tracker SVG ────────────────────────────────────────────────────────
-  const W = 860, H = 155, ML = 10, MR = 10, MT = 22, MB = 22;
+  const W = 860, H = 125, ML = 10, MR = 10, MT = 18, MB = 18;
   const cW = W - ML - MR, cH = H - MT - MB;
   const maxGap = Math.max(...mgrs.map(m =>
     Math.max(...m.gw_nums.map((_, i) => leader.cumulative[i] - m.cumulative[i]))
@@ -331,8 +331,8 @@ document.getElementById('t-season').textContent = DATA.league.season + ' Season'
   svg.appendChild(txt(`${maxGap} pts behind`, { x: ML, y: MT + cH + 14,
     'font-size': 8, fill: 'rgba(255,255,255,.2)' }));
 
-  // GW axis ticks
-  [1, 10, 20, 30, nGWs].forEach(gw => {
+  // GW axis ticks (skip GW1 — it overlaps the "pts behind" label at the left edge)
+  [10, 20, 30, nGWs].forEach(gw => {
     svg.appendChild(txt(`GW${gw}`, { x: xS(gw - 1), y: H - 3,
       'text-anchor': 'middle', 'font-size': 9, fill: 'rgba(255,255,255,.25)' }));
   });
@@ -437,7 +437,7 @@ document.getElementById('t-season').textContent = DATA.league.season + ' Season'
   DATA.managers.forEach(m => {
     const col = document.createElement('div');
     col.className = 'tp-col';
-    col.innerHTML = `<div class="tp-head" style="color:${m.color}">${m.name} <span class="tp-sub">${m.team_name}</span></div>`;
+    col.innerHTML = `<div class="tp-head" style="color:${m.color}">${m.name.split(' ')[0]}<br><span class="tp-sub">${m.team_name}</span></div>`;
 
     (m.top_players || []).forEach((p, pi) => {
       const card = document.createElement('div');
@@ -557,7 +557,7 @@ document.getElementById('t-season').textContent = DATA.league.season + ' Season'
     const g = Math.floor(pos);
 
     // Ease x-domain end toward leader's pts * 1.1
-    const frameMax  = Math.max(1, ...snapshot.map(s => s.pts));
+    const frameMax  = Math.max(10, ...snapshot.map(s => s.pts));
     const targetEnd = frameMax * 1.1;
     curDomainEnd = snap ? targetEnd : curDomainEnd + (targetEnd - curDomainEnd) * 0.18;
     x.domain([0, curDomainEnd]);
@@ -588,8 +588,8 @@ document.getElementById('t-season').textContent = DATA.league.season + ' Season'
       el.grp.setAttribute('transform', `translate(0,${displayY[d.origIdx]})`);
     });
 
-    // GW counter
-    const dispGW = Math.min(nGWs, g + 1);
+    // GW counter — shows last completed GW (stays at 0 while GW 1 is animating)
+    const dispGW = Math.floor(pos);
     gwCounter.text(dispGW);
 
     // Sync slider + label
@@ -640,11 +640,7 @@ document.getElementById('t-season').textContent = DATA.league.season + ' Season'
   });
 
   Reveal.on('slidechanged', e => {
-    if (e.currentSlide.id === 'race-slide') { setTimeout(play, 500); }
-    else { pause(); }
-  });
-  Reveal.on('ready', () => {
-    if (Reveal.getCurrentSlide().id === 'race-slide') { setTimeout(play, 600); }
+    if (e.currentSlide.id !== 'race-slide') { pause(); }
   });
 })();
 
