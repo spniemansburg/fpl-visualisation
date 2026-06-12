@@ -143,7 +143,7 @@
   <section data-background-color="#0e0e1a">
     <p class="title-league" id="t-name"></p>
     <p class="title-season" id="t-season"></p>
-    <p class="title-season">Het seizoen van de snor 👨</p>
+    <p class="title-season" style="color:#e8b86d">Het seizoen van de snor 👨🏻</p>
   </section>
 
   <!-- ② Race ───────────────────────────────────────────────────────────── -->
@@ -443,7 +443,7 @@ document.getElementById('t-season').textContent = DATA.league.season + ' Season'
   const nGWs     = Math.max(...managers.map(m => m.gw_nums.length));
 
   // Speed: one gameweek takes MS_PER_GW ms — full 38-GW race ≈ 13 s at 340
-  const MS_PER_GW = 340;
+  const MS_PER_GW = 800;
 
   // Flourish-style layout (unchanged)
   const ML = 130, MR = 75, MT = 44, MB = 62;
