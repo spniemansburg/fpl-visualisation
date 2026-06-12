@@ -15,7 +15,7 @@ import json
 import webbrowser
 
 INPUT_DATA = "fpl_data.json"
-OUTPUT_HTML = "fpl_presentation.html"
+OUTPUT_HTML = "docs/index.html"
 
 
 # ── HTML template ──────────────────────────────────────────────────────────────
@@ -165,7 +165,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
   <section data-background-color="#0e0e1a">
     <p class="title-league" id="t-name"></p>
     <p class="title-season" id="t-season"></p>
-    <div class="mgr-cards" id="t-cards"></div>
+    <p class="title-season">Het seizoen van de snor 👨</p>
   </section>
 
   <!-- ② Race ───────────────────────────────────────────────────────────── -->
@@ -228,16 +228,6 @@ const MEDALS = ['🥇','🥈','🥉','4','5'];
 // ── Slide 1: Title ────────────────────────────────────────────────────────────
 document.getElementById('t-name').textContent   = DATA.league.name;
 document.getElementById('t-season').textContent = DATA.league.season + ' Season';
-DATA.managers.forEach((m, i) => {
-  const d = document.createElement('div');
-  d.className = 'mgr-card';
-  d.style.color = m.color;
-  d.innerHTML = `<div class="medal">${MEDALS[i]}</div>
-    <div class="mname">${m.name}</div>
-    <div class="tname">${m.team_name}</div>
-    <div class="mpts" style="color:${m.color}">${m.cumulative[m.cumulative.length-1]} pts</div>`;
-  document.getElementById('t-cards').appendChild(d);
-});
 
 // ── Slide 3: Podium ───────────────────────────────────────────────────────────
 (function () {
