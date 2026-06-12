@@ -254,7 +254,7 @@ document.getElementById('t-season').textContent = 'FPL ' + DATA.league.season;
   const benchRows = mgrs.map(m => `<div class="s-row"><div class="s-dot" style="background:${m.color}"></div><span style="color:rgba(255,255,255,.85)">${m.name.split(' ')[0]}</span><span class="s-val" style="color:${m.color}">${m.bench_pts} pts</span></div>`).join('');
   document.getElementById('stats-grid').innerHTML = `
     <div class="stat-card"><div class="s-label">Beste Speelweek</div><div class="s-value">${s.best_gw.pts} pts</div><div class="s-sub">${s.best_gw.manager.split(' ')[0]} · ${s.best_gw.team} · GW ${s.best_gw.gw}</div></div>
-    <div class="stat-card"><div class="s-label">Grootste Voorsprong</div><div class="s-value">${s.max_gap.pts} pts</div><div class="s-sub">in speelweek ${s.max_gap.gw}</div></div>
+    <div class="stat-card"><div class="s-label">Grootste Voorsprong op #2</div><div class="s-value">${s.max_gap.pts} pts</div><div class="s-sub">${s.max_gap.leader.split(' ')[0]} · GW ${s.max_gap.gw}</div></div>
     <div class="stat-card"><div class="s-label">Transferstraf</div>${hitsRows}</div>
     <div class="stat-card"><div class="s-label">Punten op de Bank</div>${benchRows}</div>`;
 })();

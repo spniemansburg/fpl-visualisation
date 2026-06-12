@@ -109,12 +109,17 @@ def _compute_stats(managers: list[dict]) -> dict:
                 best_mgr, best_gw_i, best_pts = mgr, i, pts
 
     n_gws = max(len(m["cumulative"]) for m in managers)
-    max_gap, max_gap_gw = 0, 1
+    max_gap, max_gap_gw, max_gap_leader = 0, 1, managers[0]["name"]
     for gw_i in range(n_gws):
-        vals = [m["cumulative"][gw_i] for m in managers if gw_i < len(m["cumulative"])]
-        gap = max(vals) - min(vals)
+        ranked = sorted(
+            [(m["cumulative"][gw_i], m["name"]) for m in managers if gw_i < len(m["cumulative"])],
+            reverse=True,
+        )
+        if len(ranked) < 2:
+            continue
+        gap = ranked[0][0] - ranked[1][0]
         if gap > max_gap:
-            max_gap, max_gap_gw = gap, gw_i + 1
+            max_gap, max_gap_gw, max_gap_leader = gap, gw_i + 1, ranked[0][1]
 
     return {
         "best_gw": {
@@ -123,7 +128,7 @@ def _compute_stats(managers: list[dict]) -> dict:
             "gw":      best_mgr["gw_nums"][best_gw_i],
             "pts":     best_pts,
         },
-        "max_gap": {"gw": max_gap_gw, "pts": max_gap},
+        "max_gap": {"gw": max_gap_gw, "pts": max_gap, "leader": max_gap_leader},
     }
 
 

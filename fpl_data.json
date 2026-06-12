@@ -7006,8 +7006,9 @@
       "pts": 128
     },
     "max_gap": {
-      "gw": 37,
-      "pts": 99
+      "gw": 32,
+      "pts": 46,
+      "leader": "Stephan Niemansburg"
     },
     "season_decided": {
       "consistency": [
